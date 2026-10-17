@@ -1,0 +1,43 @@
+name: Construir APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Generar APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Obtener archivos
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Instalar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: 📦 Instalar herramientas
+        run: npm ci
+
+      - name: 🔧 Preparar Capacitor
+        run: |
+          npx cap init "MiApp" com.usuario.app --web-dir=dist --force
+          npx cap add android
+          npx cap sync android
+
+      - name: ☕ Instalar Java y Android SDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+
+      - name: 🔨 Construir el APK
+        working-directory: android
+        run: ./gradlew assembleDebug
+
+      - name: ✅ Subir APK listo
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mi-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
