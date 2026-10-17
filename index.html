@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0fbf6b">
+<title>APK Factory</title>
+<style>
+:root{--bg:#f1f4f2;--card:#fff;--text:#14201a;--muted:#66776d;--line:#dde5e0;--accent:#0fbf6b;--accent-d:#0a9a56;--danger:#d64545;--warn:#a96a0b;--chip:#eaf1ed}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1411;--card:#17201b;--text:#e7f0eb;--muted:#92a398;--line:#27342c;--chip:#223028;--warn:#e4a64a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+main{max-width:640px;margin:0 auto;padding:16px 16px 80px}
+h1{font-size:22px;margin:8px 0 2px}
+h2{font-size:17px;margin:0 0 12px}
+.sub{color:var(--muted);font-size:14px;margin:0 0 16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin:0 0 14px}
+label{display:block;font-size:13px;font-weight:600;margin:12px 0 4px}
+input[type=text],input[type=email],input[type=url],input[type=password],textarea,select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--text);font:inherit}
+textarea{min-height:120px;resize:vertical;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+textarea.notes{font-family:inherit;font-size:15px;min-height:84px}
+.hint{font-size:12px;color:var(--muted);margin:4px 0 0}
+button,.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:10px;padding:12px 16px;font:inherit;font-weight:600;cursor:pointer;text-decoration:none;background:var(--accent);color:#fff}
+button:hover,.btn:hover{background:var(--accent-d)}
+button.ghost,.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+button.ghost:hover{background:var(--chip)}
+button.big{width:100%;padding:15px;font-size:17px;margin-top:16px}
+button:disabled{opacity:.55;cursor:default}
+.tabs{display:flex;gap:6px;background:var(--bg);padding:4px;border-radius:12px}
+.tabs button{flex:1;background:transparent;color:var(--muted);padding:9px}
+.tabs button.on{background:var(--accent);color:#fff}
+.swatches{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.sw{border:2px solid transparent;border-radius:12px;padding:6px 0;text-align:center;font-size:12px;cursor:pointer;background:transparent;color:var(--text);font-weight:500}
+.sw i{display:block;width:34px;height:34px;border-radius:10px;margin:0 auto 4px}
+.sw.on{border-color:var(--accent)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.chip{font-size:12px;background:var(--chip);color:var(--text);border-radius:999px;padding:6px 10px;border:0;font-weight:500}
+.chip:hover{background:var(--line)}
+.badge{font-size:11px;background:var(--chip);border-radius:6px;padding:2px 7px;color:var(--muted);text-transform:uppercase;font-weight:700}
+.ok{color:var(--accent-d)}.bad{color:var(--danger)}.warn{color:var(--warn)}
+.steps{list-style:none;padding:0;margin:10px 0 0;font-size:14px}
+.steps li{padding:3px 0;color:var(--muted)}
+.steps li.done{color:var(--text)}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:s 0.8s linear infinite;vertical-align:-2px}
+@keyframes s{to{transform:rotate(360deg)}}
+pre.box{white-space:pre-wrap;word-break:break-word;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;font:13px/1.45 inherit;margin:8px 0}
+details summary{cursor:pointer;color:var(--muted);font-size:14px;margin-top:12px}
+iframe.prev{width:100%;height:340px;border:1px solid var(--line);border-radius:10px;background:#fff;margin-top:8px}
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#14201a;color:#fff;padding:11px 16px;border-radius:10px;font-size:14px;max-width:90%;z-index:9;box-shadow:0 6px 24px #0005}
+.app-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.app-head b{font-size:17px}
+ul.clean{margin:6px 0;padding-left:18px;font-size:14px}
+hr{border:0;border-top:1px solid var(--line);margin:14px 0}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <h1>📱 APK Factory</h1>
+  <p class="sub">Subí tu HTML, ZIP o enlace web y recibí un APK para instalar en Android. Todo automático.</p>
+
+  <details class="card" id="cfgBox">
+    <summary style="margin:0;font-weight:700;color:var(--text);font-size:16px">⚙️ Conexión con GitHub <span id="cfgState" class="badge">sin configurar</span></summary>
+    <label for="repo">Repositorio (usuario/nombre)</label>
+    <input type="text" id="repo" placeholder="miusuario/apk-factory" autocapitalize="off" autocorrect="off">
+    <label for="token">Token de acceso de GitHub</label>
+    <input type="password" id="token" placeholder="github_pat_…" autocomplete="off">
+    <p class="hint">Se guarda solo en este navegador. Permisos necesarios: Contents (lectura y escritura) y Actions (lectura y escritura). Mirá el README para crearlo en 2 minutos.</p>
+    <div class="row" style="margin-top:12px">
+      <button id="saveCfg">Guardar y probar</button>
+    </div>
+  </details>
+
+  <section class="card" id="progress" hidden>
+    <h2 id="pTitle">Trabajando…</h2>
+    <div id="pBody"></div>
+  </section>
+
+  <section class="card" id="newBox">
+    <h2>➕ Crear una app nueva</h2>
+    <div class="tabs" id="tabs">
+      <button data-t="html" class="on">HTML</button>
+      <button data-t="zip">ZIP</button>
+      <button data-t="url">Web (URL)</button>
+    </div>
+
+    <div id="t-html">
+      <label for="htmlFile">Archivo .html</label>
+      <input type="file" id="htmlFile" accept=".html,.htm,text/html">
+      <label for="htmlText">…o pegá el código aquí</label>
+      <textarea id="htmlText" placeholder="<!doctype html> …" spellcheck="false"></textarea>
+      <div class="row" style="margin-top:8px"><button class="ghost" id="prevBtn" type="button">👁 Vista previa</button></div>
+      <iframe class="prev" id="prev" sandbox="allow-scripts" hidden></iframe>
+    </div>
+    <div id="t-zip" hidden>
+      <label for="zipFile">Archivo .zip (con index.html adentro)</label>
+      <input type="file" id="zipFile" accept=".zip,application/zip">
+      <p class="hint">Incluí tus carpetas de css, js e imágenes. Máximo recomendado: 25 MB.</p>
+    </div>
+    <div id="t-url" hidden>
+      <label for="siteUrl">Dirección de tu sitio</label>
+      <input type="url" id="siteUrl" placeholder="https://" autocapitalize="off">
+      <p class="hint">La app mostrará tu sitio web (necesita internet).</p>
+    </div>
+
+    <label for="name">Nombre de la app</label>
+    <input type="text" id="name" maxlength="30" placeholder="Mi App">
+    <label for="email">Correo para el aviso</label>
+    <input type="email" id="email" value="arayagustavocesar22@gmail.com" autocapitalize="off">
+
+    <label>Color</label>
+    <div class="swatches" id="swatches"></div>
+
+    <label for="orient">Orientación de pantalla</label>
+    <select id="orient">
+      <option value="auto">Automática (gira con el teléfono)</option>
+      <option value="portrait">Siempre vertical</option>
+      <option value="landscape">Siempre horizontal</option>
+    </select>
+
+    <label for="icon">Icono (opcional, imagen cuadrada)</label>
+    <input type="file" id="icon" accept="image/*">
+    <p class="hint">Si no subís uno, se crea un icono con las iniciales y el color elegido.</p>
+
+    <button class="big" id="createBtn">🚀 Crear APK</button>
+  </section>
+
+  <section id="appsBox">
+    <h2 style="margin:18px 2px 10px">📦 Mis apps</h2>
+    <div id="apps"><p class="sub">Todavía no hay apps. Creá la primera arriba.</p></div>
+  </section>
+</main>
+
+<script>
+"use strict";
+const COLORS = {blue:["Azul","#2F80ED"],red:["Rojo","#EB5757"],pink:["Rosa","#F472B6"],purple:["Violeta","#8B5CF6"],green:["Verde","#22C55E"],orange:["Naranja","#F59E0B"],beige:["Beige","#D4B483"],grey:["Gris","#8E96A3"]};
+const CHIPS = [
+  ["🎨 Cambiar color","No me gusta el color: quiero que sea "],
+  ["🔘 Cambiar botón","Cambiá el botón que dice «»: quiero que "],
+  ["🐞 Reparar error","La app tiene este error: "],
+  ["📲 No se instala","No se instala el APK en mi teléfono. El error que sale es: "],
+  ["📐 Se ve cortada","En el teléfono la pantalla se ve cortada o muy chica: "]
+];
+const $ = s => document.querySelector(s);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+let S = {}; try { S = JSON.parse(localStorage.getItem("apkf") || "{}"); } catch (e) {}
+const save = () => { try { localStorage.setItem("apkf", JSON.stringify(S)); } catch (e) {} };
+let tab = "html", color = "green", defaultBranch = null, busy = false;
+
+function h(tag, props, ...kids) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(props || {})) {
+    if (k === "class") e.className = v;
+    else if (k.startsWith("on")) e.addEventListener(k.slice(2), v);
+    else if (v === true) e.setAttribute(k, "");
+    else if (v !== false && v != null) e.setAttribute(k, v);
+  }
+  kids.flat(Infinity).forEach(c => { if (c == null || c === false) return; e.append(c.nodeType ? c : document.createTextNode(String(c))); });
+  return e;
+}
+function toast(msg, ms = 4200) {
+  const t = h("div", {class: "toast"}, msg); document.body.append(t); setTimeout(() => t.remove(), ms);
+}
+const b64 = s => { const bytes = new TextEncoder().encode(s); let bin = ""; bytes.forEach(b => bin += String.fromCharCode(b)); return btoa(bin); };
+const fileB64 = f => new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(",")[1]); r.onerror = no; r.readAsDataURL(f); });
+const fileText = f => new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result)); r.onerror = no; r.readAsText(f); });
+const fmtDate = iso => { try { return new Date(iso).toLocaleString("es", {dateStyle: "short", timeStyle: "short"}); } catch (e) { return ""; } };
+const fmtSize = n => n ? (n / 1048576).toFixed(1) + " MB" : "";
+
+/* ---------- API de GitHub ---------- */
+async function api(path, opts = {}) {
+  if (!S.token || !S.repo) throw new Error("Primero configurá el repositorio y el token (⚙️).");
+  const res = await fetch("https://api.github.com" + path, {
+    method: opts.method || "GET",
+    headers: Object.assign({
+      "Authorization": "Bearer " + S.token,
+      "Accept": opts.raw ? "application/vnd.github.raw+json" : "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2022-11-28"
+    }, opts.body ? {"Content-Type": "application/json"} : {}),
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+    cache: "no-store"
+  });
+  if (res.status === 204) return null;
+  if (res.status === 404 && opts.allow404) return null;
+  if (!res.ok) {
+    let m = ""; try { m = (await res.json()).message || ""; } catch (e) {}
+    const err = new Error(`GitHub ${res.status}: ${m}`); err.status = res.status; throw err;
+  }
+  return opts.raw ? res.text() : res.json();
+}
+const getText = p => api(`/repos/${S.repo}/contents/${p}`, {raw: true, allow404: true});
+async function putFile(path, content, message) {
+  const cur = await api(`/repos/${S.repo}/contents/${path}`, {allow404: true});
+  const body = {message, content};
+  if (cur && cur.sha) body.sha = cur.sha;
+  return api(`/repos/${S.repo}/contents/${path}`, {method: "PUT", body});
+}
+async function branch() {
+  if (!defaultBranch) defaultBranch = (await api(`/repos/${S.repo}`)).default_branch;
+  return defaultBranch;
+}
+async function dispatch(id, notes, email) {
+  try {
+    await api(`/repos/${S.repo}/actions/workflows/build-apk.yml/dispatches`, {
+      method: "POST", body: {ref: await branch(), inputs: {job_id: id, notes: notes || "", email: email || ""}}
+    });
+  } catch (e) {
+    if (e.status === 404) throw new Error("No encuentro el flujo build-apk.yml. ¿Subiste la carpeta .github/workflows al repositorio y activaste Actions?");
+    throw e;
+  }
+}
+
+/* ---------- Configuración ---------- */
+function initCfg() {
+  if (!S.repo && location.hostname.endsWith(".github.io")) {
+    const repo = location.pathname.split("/")[1];
+    if (repo) S.repo = location.hostname.split(".")[0] + "/" + repo;
+  }
+  $("#repo").value = S.repo || ""; $("#token").value = S.token || "";
+  const ok = S.repo && S.token;
+  $("#cfgState").textContent = ok ? "conectado" : "sin configurar";
+  $("#cfgBox").open = !ok;
+}
+$("#saveCfg").onclick = async () => {
+  S.repo = $("#repo").value.trim().replace(/^https?:\/\/github\.com\//, "").replace(/\.git$/, "").replace(/\/$/, "");
+  S.token = $("#token").value.trim(); save();
+  try {
+    const r = await api(`/repos/${S.repo}`);
+    defaultBranch = r.default_branch;
+    $("#cfgState").textContent = "conectado"; $("#cfgBox").open = false;
+    toast("✅ Conectado a " + r.full_name); loadApps(); resumeIfRunning();
+  } catch (e) { $("#cfgState").textContent = "error"; toast("No pude conectar: " + e.message, 7000); }
+};
+
+/* ---------- Formulario ---------- */
+$("#tabs").onclick = e => {
+  const b = e.target.closest("button"); if (!b) return; tab = b.dataset.t;
+  document.querySelectorAll("#tabs button").forEach(x => x.classList.toggle("on", x === b));
+  ["html", "zip", "url"].forEach(t => $("#t-" + t).hidden = t !== tab);
+};
+for (const [k, [label, hex]] of Object.entries(COLORS)) {
+  $("#swatches").append(h("button", {type: "button", class: "sw" + (k === color ? " on" : ""), "data-c": k, onclick: ev => {
+    color = k; document.querySelectorAll(".sw").forEach(s => s.classList.toggle("on", s.dataset.c === k));
+  }}, h("i", {style: "background:" + hex}), label));
+}
+$("#htmlFile").onchange = async e => { const f = e.target.files[0]; if (f) { $("#htmlText").value = await fileText(f); if (!$("#name").value) $("#name").value = f.name.replace(/\.[^.]+$/, "").slice(0, 30); } };
+$("#zipFile").onchange = e => { const f = e.target.files[0]; if (f && !$("#name").value) $("#name").value = f.name.replace(/\.[^.]+$/, "").slice(0, 30); };
+$("#prevBtn").onclick = () => { const p = $("#prev"); p.hidden = false; p.srcdoc = $("#htmlText").value || "<p style='font-family:sans-serif'>Pegá primero tu HTML.</p>"; };
+
+const slugify = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 30) || "app";
+async function existingIds() {
+  const list = await api(`/repos/${S.repo}/contents/jobs`, {allow404: true});
+  return Array.isArray(list) ? list.filter(x => x.type === "dir").map(x => x.name) : [];
+}
+async function iconPng(file) {
+  const bmp = await createImageBitmap(file);
+  const side = Math.min(bmp.width, bmp.height), c = document.createElement("canvas"); c.width = c.height = 512;
+  c.getContext("2d").drawImage(bmp, (bmp.width - side) / 2, (bmp.height - side) / 2, side, side, 0, 0, 512, 512);
+  return c.toDataURL("image/png").split(",")[1];
+}
+function validEmail(v) { return !v || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v); }
+
+$("#createBtn").onclick = async () => {
+  if (busy) return;
+  const name = $("#name").value.trim(), email = $("#email").value.trim();
+  if (!S.token || !S.repo) { $("#cfgBox").open = true; return toast("Primero configurá GitHub (⚙️)."); }
+  if (!name) return toast("Poné un nombre a la app.");
+  if (!validEmail(email)) return toast("El correo no parece válido.");
+  let srcPath = null, srcB64 = null, url = "";
+  if (tab === "html") {
+    const t = $("#htmlText").value.trim(); if (!t) return toast("Subí o pegá tu HTML.");
+    srcPath = "source.html"; srcB64 = b64(t);
+  } else if (tab === "zip") {
+    const f = $("#zipFile").files[0]; if (!f) return toast("Elegí un archivo ZIP.");
+    if (f.size > 40 * 1048576) return toast("El ZIP es muy grande (máx. 40 MB).");
+    srcPath = "source.zip"; srcB64 = await fileB64(f);
+  } else {
+    url = $("#siteUrl").value.trim(); if (!/^https?:\/\/.+\..+/.test(url)) return toast("Poné una dirección válida que empiece con https://");
+  }
+  busy = true; $("#createBtn").disabled = true;
+  try {
+    showProgress("Subiendo tu app…", [["Subiendo archivos", false]]);
+    const ids = await existingIds(); let id = slugify(name), n = 2; const base = id;
+    while (ids.includes(id)) id = `${base}-${n++}`;
+    const msg = `app ${id}: nueva`;
+    if (srcPath) await putFile(`jobs/${id}/${srcPath}`, srcB64, msg);
+    const icon = $("#icon").files[0];
+    if (icon) await putFile(`jobs/${id}/icon.png`, await iconPng(icon), msg);
+    const meta = {id, name, type: tab, url, color, orientation: $("#orient").value, email, source_rev: Date.now(), created: new Date().toISOString()};
+    await putFile(`jobs/${id}/meta.json`, b64(JSON.stringify(meta, null, 2)), msg);
+    const since = Date.now();
+    await dispatch(id, "", email);
+    toast("🚀 Creación iniciada");
+    watch(id, since);
+  } catch (e) { hideProgress(); toast("Error: " + e.message, 8000); }
+  finally { busy = false; $("#createBtn").disabled = false; }
+};
+
+/* ---------- Progreso ---------- */
+function showProgress(title, steps, extra) {
+  $("#progress").hidden = false; $("#pTitle").replaceChildren(title);
+  $("#pBody").replaceChildren(
+    h("ul", {class: "steps"}, steps.map(([t, d]) => h("li", {class: d ? "done" : ""}, (d ? "✅ " : "⏳ ") + t))),
+    extra || ""
+  );
+  $("#progress").scrollIntoView({behavior: "smooth", block: "start"});
+}
+function hideProgress() { $("#progress").hidden = true; }
+const stepIcon = s => s.conclusion === "success" ? "✅" : s.conclusion === "failure" ? "❌" : s.status === "in_progress" ? "⏳" : "▫️";
+const STEP_NAMES = {"Construir el APK": "Construyendo el APK (la parte más larga)", "Publicar el APK (Release)": "Publicando el archivo", "Guardar resultado y diagnóstico": "Guardando el resultado", "Avisar por correo": "Enviando el aviso por correo"};
+
+async function watch(id, since) {
+  const t0 = Date.now(); let run = null;
+  while (Date.now() - t0 < 3600e3) {
+    try {
+      const r = await api(`/repos/${S.repo}/actions/workflows/build-apk.yml/runs?per_page=15&event=workflow_dispatch`);
+      run = r.workflow_runs.find(x => (x.display_title || "").endsWith("· " + id) && new Date(x.created_at).getTime() >= since - 90000) || run;
+    } catch (e) { /* reintenta */ }
+    const secs = Math.floor((Date.now() - t0) / 1000);
+    let steps = [["Esperando que GitHub lo reciba…", false]], liveSteps = null;
+    if (run) {
+      try {
+        const j = await api(`/repos/${S.repo}/actions/runs/${run.id}/jobs`);
+        const job = j.jobs && j.jobs[0];
+        if (job) liveSteps = job.steps.filter(s => STEP_NAMES[s.name]).map(s => h("li", {class: s.conclusion === "success" ? "done" : ""}, stepIcon(s) + " " + STEP_NAMES[s.name]));
+      } catch (e) {}
+    }
+    const extra = h("p", {class: "hint"}, `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")} transcurridos · normalmente tarda entre 4 y 10 minutos. Podés cerrar la página: te avisamos por correo.`);
+    $("#progress").hidden = false; $("#pTitle").replaceChildren(h("span", {class: "spin"}), " Creando tu APK…");
+    $("#pBody").replaceChildren(liveSteps ? h("ul", {class: "steps"}, liveSteps) : h("ul", {class: "steps"}, h("li", {}, "⏳ " + steps[0][0])), extra);
+    if (run && run.status === "completed") break;
+    await sleep(6000);
+  }
+  await loadApps();
+  const job = (window._jobs || []).find(j => j.id === id), r = job && job.result;
+  const body = h("div", {});
+  if (r && r.status === "success") {
+    $("#pTitle").replaceChildren("✅ ¡Tu app está lista!");
+    body.append(h("a", {class: "btn", href: r.apk_url}, "⬇️ Descargar APK " + fmtSize(r.apk_size)),
+      h("p", {class: "hint"}, "Abrí este enlace desde tu teléfono Android. También te llegó por correo."));
+  } else {
+    $("#pTitle").replaceChildren("❌ No se pudo crear");
+    if (r && r.diagnosis) body.append(diagBlock(r.diagnosis));
+    body.append(h("p", {class: "hint"}, "Escribí el problema en la casilla de tu app (más abajo) y tocá «Aplicar y crear de nuevo»."));
+    if (run) body.append(h("a", {href: run.html_url, target: "_blank", rel: "noopener"}, "Ver registro técnico"));
+  }
+  $("#pBody").replaceChildren(body);
+}
+function diagBlock(d) {
+  const wrap = h("div", {});
+  (d.hints || []).forEach(t => wrap.append(h("p", {class: "bad"}, "• " + t)));
+  if (d.ai) wrap.append(h("pre", {class: "box"}, d.ai));
+  return wrap;
+}
+async function resumeIfRunning() {
+  try {
+    const r = await api(`/repos/${S.repo}/actions/workflows/build-apk.yml/runs?per_page=5&event=workflow_dispatch`);
+    const run = r.workflow_runs.find(x => x.status !== "completed");
+    if (run) { const id = (run.display_title || "").split("· ")[1]; if (id) watch(id, new Date(run.created_at).getTime()); }
+  } catch (e) {}
+}
+
+/* ---------- Mis apps ---------- */
+async function loadApps() {
+  const box = $("#apps");
+  if (!S.token || !S.repo) return;
+  try {
+    const ids = await existingIds();
+    const jobs = await Promise.all(ids.map(async id => {
+      const [m, r, hs] = await Promise.all([getText(`jobs/${id}/meta.json`), getText(`jobs/${id}/result.json`), getText(`jobs/${id}/history.json`)]);
+      const p = t => { try { return t ? JSON.parse(t) : null; } catch (e) { return null; } };
+      return {id, meta: p(m), result: p(r), history: p(hs) || []};
+    }));
+    window._jobs = jobs.filter(j => j.meta);
+    box.replaceChildren(...(window._jobs.length ? window._jobs.map(card) : [h("p", {class: "sub"}, "Todavía no hay apps. Creá la primera arriba.")]));
+  } catch (e) { box.replaceChildren(h("p", {class: "bad"}, "No pude cargar tus apps: " + e.message)); }
+}
+
+function card(j) {
+  const {id, meta, result: r, history} = j;
+  const status = !r ? h("span", {class: "hint"}, "Sin resultados todavía")
+    : r.status === "success" ? h("span", {class: "ok"}, `✅ v${r.version} · ${fmtDate(r.finished_at)}`)
+    : h("span", {class: "bad"}, `❌ falló · ${fmtDate(r.finished_at)}`);
+  const notes = h("textarea", {class: "notes", placeholder: "Escribí acá qué querés cambiar o qué falla. Ej.: «no me gusta el color, ponelo azul», «el botón Guardar no funciona», «no se instala, dice app no instalada»."});
+  const chips = h("div", {class: "row", style: "margin:8px 0"}, CHIPS.map(([l, t]) => h("button", {type: "button", class: "chip", onclick: () => { notes.value = t; notes.focus(); notes.setSelectionRange(t.length, t.length); }}, l)));
+  const apply = h("button", {class: "big", onclick: async ev => {
+    const txt = notes.value.trim(); if (!txt) return toast("Escribí primero qué querés cambiar.");
+    await rebuild(id, txt, ev.target);
+  }}, "🛠 Aplicar y crear de nuevo");
+  const upl = h("input", {type: "file", accept: ".html,.htm,.zip", hidden: true, onchange: async e => { const f = e.target.files[0]; if (f) await replaceSource(id, meta, f); }});
+
+  const out = h("div", {class: "card"},
+    h("div", {class: "app-head"}, h("b", {}, meta.name), h("span", {class: "badge"}, meta.type)),
+    h("div", {}, status),
+    r && r.status === "success" ? h("div", {class: "row", style: "margin-top:10px"},
+      h("a", {class: "btn", href: r.apk_url}, "⬇️ Descargar APK"),
+      navigator.share ? h("button", {class: "ghost", onclick: () => navigator.share({title: meta.name, url: r.apk_url}).catch(() => {})}, "Compartir") : "",
+      h("button", {class: "ghost", onclick: () => navigator.clipboard.writeText(r.apk_url).then(() => toast("Enlace copiado"))}, "Copiar enlace")) : "",
+    r && r.status !== "success" && r.diagnosis ? diagBlock(r.diagnosis) : "",
+    r && r.ai_answer ? h("pre", {class: "box"}, "🤖 " + r.ai_answer) : "",
+    r && r.ai_error ? h("p", {class: "warn"}, "⚠ " + r.ai_error) : "",
+    r && r.warnings && r.warnings.length ? h("ul", {class: "clean warn"}, r.warnings.map(w => h("li", {}, w))) : "",
+    h("hr"),
+    h("label", {}, "✏️ Cambios o reparaciones"), notes, chips, apply,
+    h("div", {class: "row", style: "margin-top:12px"},
+      h("button", {class: "ghost", onclick: ev => rebuild(id, "", ev.target)}, "🔁 Volver a crear igual"),
+      h("button", {class: "ghost", onclick: () => upl.click()}, "📤 Subir versión nueva (HTML/ZIP)"), upl),
+    history.length ? h("details", {}, h("summary", {}, `Historial (${history.length})`),
+      h("ul", {class: "clean"}, history.slice().reverse().map(x => h("li", {},
+        `${fmtDate(x.date)} · ${x.status === "success" ? "✅ v" + x.version : "❌"}${x.notes ? " · «" + x.notes.slice(0, 80) + "»" : ""}`)))) : ""
+  );
+  return out;
+}
+
+async function rebuild(id, notes, btn) {
+  if (busy) return; busy = true; if (btn) btn.disabled = true;
+  try {
+    const job = (window._jobs || []).find(j => j.id === id);
+    const since = Date.now();
+    showProgress("Enviando pedido…", [["Enviando pedido a GitHub", false]]);
+    await dispatch(id, notes, job && job.meta.email);
+    toast(notes ? "🛠 Aplicando tus cambios…" : "🔁 Creando de nuevo…");
+    watch(id, since);
+  } catch (e) { hideProgress(); toast("Error: " + e.message, 8000); }
+  finally { busy = false; if (btn) btn.disabled = false; }
+}
+
+async function replaceSource(id, meta, file) {
+  if (busy) return; busy = true;
+  try {
+    const isZip = /\.zip$/i.test(file.name);
+    if (file.size > 40 * 1048576) throw new Error("El archivo es muy grande (máx. 40 MB).");
+    showProgress("Subiendo versión nueva…", [["Subiendo archivo", false]]);
+    await putFile(`jobs/${id}/${isZip ? "source.zip" : "source.html"}`, await fileB64(file), `app ${id}: nueva versión`);
+    const m = Object.assign({}, meta, {type: isZip ? "zip" : "html", source_rev: Date.now()});
+    await putFile(`jobs/${id}/meta.json`, b64(JSON.stringify(m, null, 2)), `app ${id}: meta`);
+    const since = Date.now(); await dispatch(id, "", meta.email); watch(id, since);
+  } catch (e) { hideProgress(); toast("Error: " + e.message, 8000); }
+  finally { busy = false; }
+}
+
+initCfg();
+if (S.token && S.repo) { loadApps(); resumeIfRunning(); }
+</script>
+</body>
+</html>
